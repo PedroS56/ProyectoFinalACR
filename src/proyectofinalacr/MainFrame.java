@@ -286,7 +286,7 @@ public class MainFrame extends JFrame {
             Out.error("Estribe el nombre del archivo");
         }else{
             String fileName=edtBuscar.getText();
-            nodeData.searchFileOnNet(fileName);
+            nodeData.buscaArch(fileName);
         }
     }//GEN-LAST:event_btnBuscarActionPerformed
 

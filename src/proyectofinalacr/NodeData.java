@@ -71,15 +71,13 @@ public class NodeData implements searchInterface{
             siguiente=anterior=myInfo;
         }else{
             int myIndex=nodesInNet.indexOf(myInfo);
-            //If it is the last in the list, the succesor is the first in list, otherwise is the one next to it.
             siguiente=(myIndex==(nodesInNet.size()-1))?nodesInNet.get(0):nodesInNet.get(myIndex+1);
-            //If it is the first in the list, the anterior is the last, otherwise is the one behind it.
             anterior=(myIndex==0)?nodesInNet.get(nodesInNet.size()-1):nodesInNet.get(myIndex-1);
         }
         if(!initializedNode){
-            initializeRMIServer(); // If first time in the net, just initializeHisServer
+            initializeRMIServer(); 
         }else{
-            restartRMIServer(); // If it was already on the net, it also needs to restart his RMIserver (unexporting his object)
+            restartRMIServer(); 
         }
     }
 
@@ -88,16 +86,16 @@ public class NodeData implements searchInterface{
     }
 
     public void connect(){
-        ClientMulticast.getInstance().start(); //Starting getting members of the net
+        ClientMulticast.getInstance().start(); 
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         Out.info("Inizializando...");
-        initializeNode(); //Initialazing node
-        ServerMulticast.getInstance().start(); //Stating server to echo my RMIport
-        MainFrame.getWindow().enableBusqueda(); //Enabling search
+        initializeNode();
+        ServerMulticast.getInstance().start(); 
+        MainFrame.getWindow().enableBusqueda(); 
     }
 
     public void addNewMemberToRing(Node newMember) {
@@ -124,7 +122,7 @@ public class NodeData implements searchInterface{
             try{
                 registry=java.rmi.registry.LocateRegistry.createRegistry(port);
             }catch(Exception f){
-                registry=java.rmi.registry.LocateRegistry.getRegistry(port); //If it already exists
+                registry=java.rmi.registry.LocateRegistry.getRegistry(port); 
             }
         } catch (Exception e) {
             System.err.println("Excepcion RMI del registry:");
@@ -135,9 +133,9 @@ public class NodeData implements searchInterface{
             System.setProperty("java.rmi.server.hostname", ip);
             searchInterface stub = (searchInterface) UnicastRemoteObject.exportObject(instance, 0);
             try {
-                registry.bind("searchInterface", stub); //Binding for the first time
+                registry.bind("searchInterface", stub); 
             }catch(Exception f){
-                registry.rebind("searchInterface", stub); //If the name was already on registry, just rebind.
+                registry.rebind("searchInterface", stub); 
             }
             Out.info("Servidor RMI listo...");
         } catch (Exception e) {
@@ -159,11 +157,10 @@ public class NodeData implements searchInterface{
 
 
     
-    public void searchFileOnNet(String fileName){
-        //First check on my own files
+    public void buscaArch(String fileName){
         if(FilesUtil.isFileOnDirectory(fileName,this.source)){
             Out.strong("Archivo encontrado en este nodo");
-        }else{ //If i don't have it in my sources folder, then ask in the net
+        }else{ 
             String ip=siguiente.getIPaddress().toString();
             ip=ip.substring(1, ip.length());
             int indexToAsk=nodesInNet.indexOf(siguiente); //
@@ -172,7 +169,7 @@ public class NodeData implements searchInterface{
                 Registry registry = LocateRegistry.getRegistry(ip, siguiente.getRMIport());
                 searchInterface stub = (searchInterface) registry.lookup("searchInterface");
                     Out.info("Preguntando a "+nodesInNet.get(indexToAsk).toString()+"...");
-                    founded = stub.searchRemoteFile(nodesInNet.indexOf(myInfo),indexToAsk, fileName);
+                    founded = stub.buscaArchRemote(nodesInNet.indexOf(myInfo),indexToAsk, fileName);
                     if (founded == -1) {
                         Out.error(nodesInNet.get(indexToAsk).toString()+" NO encontrado...");
                         Out.error("El archivo no esta en la red");
@@ -189,7 +186,7 @@ public class NodeData implements searchInterface{
     }
 
     @Override
-    public int searchRemoteFile(int indexStart,int indexNode, String fileName) throws RemoteException {
+    public int buscaArchRemote(int indexStart,int indexNode, String fileName) throws RemoteException {
          Out.info("Alguien busca el archivo: \""+fileName+"\"");
             boolean IHaveIt=FilesUtil.isFileOnDirectory(fileName,this.source);
             if(IHaveIt){
@@ -207,8 +204,8 @@ public class NodeData implements searchInterface{
                         String ip=siguiente.getIPaddress().toString();
                         Registry registry = LocateRegistry.getRegistry(ip.substring(1, ip.length()), siguiente.getRMIport());
                         searchInterface stub = (searchInterface) registry.lookup("searchInterface");
-//                        int founded= stub.searchRemoteFile(indexStart,indexNode,fileName);
-                        return stub.searchRemoteFile(indexStart,indexNode,fileName);
+//                        int founded= stub.buscaArchRemote(indexStart,indexNode,fileName);
+                        return stub.buscaArchRemote(indexStart,indexNode,fileName);
                     }catch (Exception e){
                         System.err.println("Something went wrong...");
                         e.printStackTrace();
